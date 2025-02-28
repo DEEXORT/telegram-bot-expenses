@@ -12,6 +12,5 @@ public class Main {
         TelegramBot telegramBot = new TelegramBot();
         TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
         api.registerBot(telegramBot);
-
     }
 }
