@@ -1,5 +1,5 @@
-# Use OpenJDK 21 as the base image
-FROM openjdk:21-slim AS build
+# Use OpenJDK 23 as the base image
+FROM openjdk:23-slim AS build
 
 # Install Maven
 RUN apt-get update && apt-get install -y maven
