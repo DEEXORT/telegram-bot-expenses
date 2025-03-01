@@ -18,9 +18,9 @@ public class TelegramBot extends TelegramLongPollingBot {
     private static final String SHOW_CATEGORIES_BTN = "Показать категории";
     private static final String SHOW_EXPENSES_BTN = "Показать расходы";
 
-    private static final String IDLE_STATE = "IDLE";
-    private static final String AWAITS_CATEGORY_STATE = "AWAITS_CATEGORY";
-    private static final String AWAITS_EXPENSE_STATE = "AWAITS_EXPENSE";
+//    private static final String IDLE_STATE = "IDLE";
+//    private static final String AWAITS_CATEGORY_STATE = "AWAITS_CATEGORY";
+//    private static final String AWAITS_EXPENSE_STATE = "AWAITS_EXPENSE";
 
     private static final Map<Long, ChatState> CHATS = new HashMap<>();
 
@@ -44,7 +44,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         Message message = update.getMessage();
         Long chatId = message.getChatId();
-        CHATS.putIfAbsent(chatId, new ChatState(IDLE_STATE));
+        CHATS.putIfAbsent(chatId, new ChatState(State.IDLE_STATE));
 
         // Лог
         User from = message.getFrom();
@@ -54,7 +54,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         ChatState currentChat = CHATS.get(chatId);
         switch (currentChat.state) {
-            case IDLE_STATE -> handleIdle(message, currentChat);
+            case State.IDLE_STATE -> handleIdle(message, currentChat);
             case AWAITS_CATEGORY_STATE -> handleAwaitCategory(message, currentChat);
             case AWAITS_EXPENSE_STATE -> handleAwaitsExpense(message, currentChat);
         }
@@ -71,10 +71,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         );
 
         switch (incomingText) {
-            case SHOW_CATEGORIES_BTN -> changeState(IDLE_STATE, chatId, currentChat, currentChat.getFormattedCategories(), defaultButtons);
-            case SHOW_EXPENSES_BTN -> changeState(IDLE_STATE, chatId, currentChat, currentChat.getFormattedExpenses(), defaultButtons);
-            case ADD_EXPENSE_BTN -> changeState(AWAITS_CATEGORY_STATE, chatId, currentChat, "Укажите категорию", null);
-            default -> changeState(IDLE_STATE, chatId, currentChat,"Я не знаю такой команды", defaultButtons);
+            case SHOW_CATEGORIES_BTN -> changeState(State.IDLE_STATE, chatId, currentChat, currentChat.getFormattedCategories(), defaultButtons);
+            case SHOW_EXPENSES_BTN -> changeState(State.IDLE_STATE, chatId, currentChat, currentChat.getFormattedExpenses(), defaultButtons);
+            case ADD_EXPENSE_BTN -> changeState(State.AWAITS_CATEGORY_STATE, chatId, currentChat, "Укажите категорию", null);
+            default -> changeState(State.IDLE_STATE, chatId, currentChat,"Я не знаю такой команды", defaultButtons);
         }
     }
 
@@ -84,14 +84,14 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         currentChat.expenses.putIfAbsent(incomingText, new ArrayList<>());
         currentChat.data = incomingText;
-        changeState(AWAITS_EXPENSE_STATE, chatId, currentChat, "Введите сумму", null);
+        changeState(State.AWAITS_EXPENSE_STATE, chatId, currentChat, "Введите сумму", null);
     }
 
     private void handleAwaitsExpense(Message incomingMessage, ChatState currentChat) {
         Long chatId = incomingMessage.getChatId();
 
         if (currentChat.data == null) {
-            changeState(IDLE_STATE, chatId, currentChat, "Что-то пошло не так. Попробуйте сначала", List.of(
+            changeState(State.IDLE_STATE, chatId, currentChat, "Что-то пошло не так. Попробуйте сначала", List.of(
                     ADD_EXPENSE_BTN,
                     SHOW_EXPENSES_BTN,
                     SHOW_CATEGORIES_BTN
@@ -100,14 +100,14 @@ public class TelegramBot extends TelegramLongPollingBot {
         String incomingText = incomingMessage.getText();
         Integer expense = Integer.parseInt(incomingText);
         currentChat.expenses.get(currentChat.data).add(expense);
-        changeState(IDLE_STATE, chatId, currentChat, "Расход успешно добавлен", List.of(
+        changeState(State.IDLE_STATE, chatId, currentChat, "Расход успешно добавлен", List.of(
                 ADD_EXPENSE_BTN,
                 SHOW_EXPENSES_BTN,
                 SHOW_CATEGORIES_BTN
         ));
     }
 
-    private void changeState(String newState,
+    private void changeState(State newState,
                              Long chatId,
                              ChatState currentChat,
                              String messageText,

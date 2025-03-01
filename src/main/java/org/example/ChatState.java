@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.Set;
 
 public class ChatState {
-    public String state;
+    public State state;
     public String data = null;
     public Map<String, List<Integer>> expenses = new HashMap<>();
 
-    public ChatState(String initialState) {
+    public ChatState(State initialState) {
         this.state = initialState;
     }
 
