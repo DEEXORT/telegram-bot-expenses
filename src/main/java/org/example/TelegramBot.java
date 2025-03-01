@@ -14,14 +14,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.*;
 
 public class TelegramBot extends TelegramLongPollingBot {
-    private static final String ADD_EXPENSE_BTN = "Добавить расход";
-    private static final String SHOW_CATEGORIES_BTN = "Показать категории";
-    private static final String SHOW_EXPENSES_BTN = "Показать расходы";
-
-//    private static final String IDLE_STATE = "IDLE";
-//    private static final String AWAITS_CATEGORY_STATE = "AWAITS_CATEGORY";
-//    private static final String AWAITS_EXPENSE_STATE = "AWAITS_EXPENSE";
-
     private static final Map<Long, ChatState> CHATS = new HashMap<>();
 
     @Override
@@ -64,17 +56,19 @@ public class TelegramBot extends TelegramLongPollingBot {
         String incomingText = incomingMessage.getText();
         Long chatId = incomingMessage.getChatId();
 
-        final List<String> defaultButtons = List.of(
-                ADD_EXPENSE_BTN,
-                SHOW_EXPENSES_BTN,
-                SHOW_CATEGORIES_BTN
-        );
+        final List<String> idleButtons = ButtonMessageConstants.getButtonsForState(currentChat.state);
 
         switch (incomingText) {
-            case SHOW_CATEGORIES_BTN -> changeState(State.IDLE_STATE, chatId, currentChat, currentChat.getFormattedCategories(), defaultButtons);
-            case SHOW_EXPENSES_BTN -> changeState(State.IDLE_STATE, chatId, currentChat, currentChat.getFormattedExpenses(), defaultButtons);
-            case ADD_EXPENSE_BTN -> changeState(State.AWAITS_CATEGORY_STATE, chatId, currentChat, "Укажите категорию", null);
-            default -> changeState(State.IDLE_STATE, chatId, currentChat,"Я не знаю такой команды", defaultButtons);
+            case ButtonMessageConstants.SHOW_CATEGORIES_BTN -> {
+                changeState(State.IDLE_STATE, chatId, currentChat, currentChat.getFormattedCategories(), idleButtons);
+            }
+            case ButtonMessageConstants.SHOW_EXPENSES_BTN -> {
+                changeState(State.IDLE_STATE, chatId, currentChat, currentChat.getFormattedExpenses(), idleButtons);
+            }
+            case ButtonMessageConstants.ADD_EXPENSE_BTN -> {
+                changeState(State.AWAITS_CATEGORY_STATE, chatId, currentChat, "Укажите категорию", null);
+            }
+            default -> changeState(State.IDLE_STATE, chatId, currentChat,"Я не знаю такой команды", idleButtons);
         }
     }
 
@@ -89,22 +83,19 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void handleAwaitsExpense(Message incomingMessage, ChatState currentChat) {
         Long chatId = incomingMessage.getChatId();
+        final List<String> idleButtons = ButtonMessageConstants.getButtonsForState(currentChat.state);
 
         if (currentChat.data == null) {
-            changeState(State.IDLE_STATE, chatId, currentChat, "Что-то пошло не так. Попробуйте сначала", List.of(
-                    ADD_EXPENSE_BTN,
-                    SHOW_EXPENSES_BTN,
-                    SHOW_CATEGORIES_BTN
-            ));
+            changeState(State.IDLE_STATE,
+                    chatId,
+                    currentChat,
+                    "Что-то пошло не так. Попробуйте сначала",
+                    idleButtons);
         }
         String incomingText = incomingMessage.getText();
         Integer expense = Integer.parseInt(incomingText);
         currentChat.expenses.get(currentChat.data).add(expense);
-        changeState(State.IDLE_STATE, chatId, currentChat, "Расход успешно добавлен", List.of(
-                ADD_EXPENSE_BTN,
-                SHOW_EXPENSES_BTN,
-                SHOW_CATEGORIES_BTN
-        ));
+        changeState(State.IDLE_STATE, chatId, currentChat, "Расход успешно добавлен", idleButtons);
     }
 
     private void changeState(State newState,
